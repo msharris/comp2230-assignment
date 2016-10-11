@@ -1,0 +1,8 @@
+## IntelliJ IDEA ##
+
+# Project files
+.idea
+*.iml
+
+# Compiler output
+out
