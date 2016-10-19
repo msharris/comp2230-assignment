@@ -15,12 +15,13 @@ import static java.lang.Math.sqrt;
 
 public class Assignment {
     private static ArrayList<HotSpot> hotSpots = new ArrayList<>();	//HotSpots stored array list
+    private static ArrayList<Edge> setOfEdges = new ArrayList<>();  //The set of all edges in the graph (excluding edges that loop on one vertex)
     private static DecimalFormat formatter = new DecimalFormat("0.00");    	//2 decimal place format for doubles
 
     public static void main(String[] args) {
         readIn();			//Read input file
         initialGreeting();	//Greeting and initial messages
-        weightedGraph();	//Print the weighted graph
+        weightedGraph();	//Print the weighted graph, this also collects the set of all edges
 
         int selection;
         Scanner sc = new Scanner(System.in);
@@ -70,7 +71,7 @@ public class Assignment {
     public static double distanceBetween(HotSpot s1, HotSpot s2) {
         double distance = sqrt(pow((s2.getX()-s1.getX()),2) + pow((s2.getY()-s1.getY()),2));	//Euclidean Distance formula
         return Double.parseDouble(formatter.format(distance));									//Round to two d.p. and covert back to double
-        //Note, not rounded, just chopping off everything after 2 d.p. - look into rounding!
+        //TODO: Note, not rounded, just chopping off everything after 2 d.p. - look into rounding!
     }
 
     public static void weightedGraph() {
@@ -78,10 +79,25 @@ public class Assignment {
             String currentLine = "";
             for(int j = 0; j < hotSpots.size(); j++) {
                 currentLine = currentLine.concat(distanceBetween(hotSpots.get(i), hotSpots.get(j)) + " ");
+                Edge tempEdge = new Edge(hotSpots.get(i), hotSpots.get(j), distanceBetween(hotSpots.get(i), hotSpots.get(j)));
+                if(i != j && !containsReverse(tempEdge)) {    //This condition removes edges that are loops on single vertices && edges that are between the same vertices, just different order
+                    setOfEdges.add(tempEdge);
+                }
             }
             System.out.println(currentLine);
         }
     }
+
+    public static boolean containsReverse(Edge original) {
+        Edge swapped = new Edge(original.getV2(), original.getV1(), original.getWeight());  //Create a new edge, with the vertices swapped
+        if(setOfEdges.contains(swapped)) {          //If the swapped vertices create an edge thats already in the set of edges
+            return true;                            //True - don't add to list again
+        } else {
+            return false;                           //False - add it to the list
+        }
+    }
+
+
 
     public static void findCentroid(ArrayList<HotSpot> cluster) {
         double xTotal = 0;
@@ -101,6 +117,27 @@ public class Assignment {
 
     public static void userDefined(int numberOfStations) {
         //TODO
+        ArrayList<ArrayList<Edge>> disjointSets;    ///maybe??
+        ArrayList<Edge> addedEdges = new ArrayList<>();
+        ArrayList<Edge> unaddedEdges = setOfEdges;
+        while(disjointSets.size() < numberOfStations) {
+            Edge tempEdge = searchShortestEdge(unaddedEdges);
+            if(!createsCycle(tempEdge, addedEdges)) {  //Adding this edge doesn't create a cycle
+                //TODO: add it to the added edges. Note we need to think about how we will have added edges, but also disjoint sets of added edges
+                //Disjoint sets in an array list which holds a list of edges in that subset? see above("maybe")
+
+            } else {    //This edge does create a cycle, and shouldn't be added to the set. (Will also be removed so it's not considered every time after this, if it creates a cycle now, it always will)
+                unaddedEdges.remove(tempEdge);  //Remove this edge, it will create a cycle
+            }
+        }
+    }
+
+    public static Edge searchShortestEdge(ArrayList<Edge> list) {
+        //TODO: This will just search through the unadded edges and return the next shortest one
+    }
+
+    public static boolean createsCycle(Edge test, ArrayList<Edge> addedEdges) {
+        //TODO: This will take the added edges and test to see if the edge we are looking to add will create a cycle
     }
 
 }

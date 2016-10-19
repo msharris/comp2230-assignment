@@ -50,7 +50,6 @@ public class Station {
             } else {
                 spotList = spotList.concat(stationHotSpots.get(i).getId()+"");			//Otherwise don't add anything
             }
-
         }
         return id + ": \nCoordinates: (" + xVal + ", " + yVal + ")\nHotSpots: {" + spotList + "}";
     }
