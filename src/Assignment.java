@@ -52,7 +52,7 @@ public class Assignment {
         File file = new File("input.txt");
         try {
             Scanner in = new Scanner(file);
-            while(in.hasNext()) {
+            while (in.hasNext()) {
                 int tempId = in.nextInt();
                 double tempX = in.nextDouble();
                 double tempY = in.nextDouble();
@@ -60,8 +60,9 @@ public class Assignment {
                 hotSpots.add(tempHotSpot);
             }
             in.close();
-        } catch(FileNotFoundException e) {
-            System.out.println("File not found");
+        } catch (Exception e) {
+            System.out.println("An exception occurred reading " + file.getName());
+            System.exit(1);
         }
     }
     private void initialGreeting() {
