@@ -37,7 +37,10 @@ public class Assignment {
 
     private void readInputFile() {
         try {
+            // Open a Scanner on the input file
             Scanner sc = new Scanner(new File("input.txt"));
+
+            // Read the input and create new hotspots
             while (sc.hasNext()) {
                 int id = sc.nextInt();
                 double x = sc.nextDouble();
@@ -45,13 +48,17 @@ public class Assignment {
                 Hotspot hotspot = new Hotspot(id, x, y);
                 hotspots.add(hotspot);
             }
+
+            // Close the Scanner
             sc.close();
         } catch (Exception e) {
+            // Catch any exceptions that can go wrong when reading the input file
             System.out.print("An exception occurred reading the input file\n");
             System.exit(1);
         }
     }
 
+    // TODO Display "There is 1 hotspot." when input has only 1 hotspot?
     private void printGreeting() {
         System.out.print("Hello and welcome to Kruskal’s clustering!\n\n");
         System.out.print("There are " + hotspots.size() + " hotspots.\n\n");
