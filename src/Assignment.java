@@ -7,17 +7,20 @@
  * Description: TODO
  */
 
-import java.io.*;
-import java.util.*;
-import java.text.DecimalFormat;
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.Scanner;
+
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 public class Assignment {
 
-    private ArrayList<HotSpot> hotSpots = new ArrayList<>();        //HotSpots stored array list
-    private ArrayList<Edge> setOfEdges = new ArrayList<>();         //The set of all edges in the graph (excluding edges that loop on one vertex)
-    private DecimalFormat formatter = new DecimalFormat("0.00");    //2 decimal place format for doubles
+    private ArrayList<Hotspot> hotspots = new ArrayList<>();
+    private ArrayList<Edge> edges = new ArrayList<>();  // Excludes edges that loop on one vertex
 
     public static void main(String[] args) {
         Assignment assignment = new Assignment();
@@ -25,88 +28,110 @@ public class Assignment {
     }
 
     private void run() {
-        readIn();			//Read input file
-        initialGreeting();	//Greeting and initial messages
-        weightedGraph();	//Print the weighted graph, this also collects the set of all edges
-
-        int selection;
-        Scanner sc = new Scanner(System.in);
-        menu();
-        selection = sc.nextInt();
-        while(selection != 0) {
-            if(selection < -1 || selection > 5) {
-                System.out.println("Entry not valid.");
-            }
-            if(selection == -1) {
-                autoSelect(); //~> Interclustering Dist in this method?
-            } else {
-                userDefined(selection); //~> Interclustering Dist in this method?
-            }
-
-            menu();
-        }
-        System.out.println("Thank you for using Kruskal’s Clustering. Bye.");
+        readInputFile();
+        printGreeting();
+        weightedGraph();
+        System.out.print("\n\n"); // Two blank lines as per assignment specs
+        mainMenu();
     }
 
-    private void readIn() {
-        File file = new File("input.txt");
+    private void readInputFile() {
         try {
-            Scanner in = new Scanner(file);
-            while (in.hasNext()) {
-                int tempId = in.nextInt();
-                double tempX = in.nextDouble();
-                double tempY = in.nextDouble();
-                HotSpot tempHotSpot = new HotSpot(tempId, tempX, tempY);
-                hotSpots.add(tempHotSpot);
+            Scanner sc = new Scanner(new File("input.txt"));
+            while (sc.hasNext()) {
+                int id = sc.nextInt();
+                double x = sc.nextDouble();
+                double y = sc.nextDouble();
+                Hotspot hotspot = new Hotspot(id, x, y);
+                hotspots.add(hotspot);
             }
-            in.close();
+            sc.close();
         } catch (Exception e) {
-            System.out.println("An exception occurred reading " + file.getName());
+            System.out.print("An exception occurred reading the input file\n");
             System.exit(1);
         }
     }
-    private void initialGreeting() {
-        System.out.println("Hello and welcome to Kruskal’s clustering!\n");
-        System.out.println("There are " + hotSpots.size() + " hotspots.\n");
-        System.out.println("The weighted graph of hotspots: \n");
-    }
-    private void menu() {
-        System.out.println("\nHow many emergency stations would you like?");
-        System.out.println("(Enter a number between 1 and 5 to place the emergency stations.\n Enter -1 to automatically select the number of emergency stations.\n Enter 0 to exit.)\n\n");
-    }
 
-    private double distanceBetween(HotSpot s1, HotSpot s2) {
-        double distance = sqrt(pow((s2.getX()-s1.getX()),2) + pow((s2.getY()-s1.getY()),2));	//Euclidean Distance formula
-        return Double.parseDouble(formatter.format(distance));									//Round to two d.p. and covert back to double
-        //TODO: Note, not rounded, just chopping off everything after 2 d.p. - look into rounding!
+    private void printGreeting() {
+        System.out.print("Hello and welcome to Kruskal’s clustering!\n\n");
+        System.out.print("There are " + hotspots.size() + " hotspots.\n\n");
+        System.out.print("The weighted graph of hotspots:\n\n");
     }
 
     private void weightedGraph() {
-        for(int i = 0; i < hotSpots.size(); i++) {
+        for (int i = 0; i < hotspots.size(); i++) {
             String currentLine = "";
-            for(int j = 0; j < hotSpots.size(); j++) {
-                currentLine = currentLine.concat(distanceBetween(hotSpots.get(i), hotSpots.get(j)) + " ");
-                Edge tempEdge = new Edge(hotSpots.get(i), hotSpots.get(j), distanceBetween(hotSpots.get(i), hotSpots.get(j)));
-                if(i != j && !containsReverse(tempEdge)) {    //This condition removes edges that are loops on single vertices && edges that are between the same vertices, just different order
-                    setOfEdges.add(tempEdge);
+            for (int j = 0; j < hotspots.size(); j++) {
+                // Get weight between hotspots
+                double weight = distanceBetween(hotspots.get(i), hotspots.get(j));
+
+                // Create an edge and add it to the set if it's not a loop and it's not already added in reverse
+                Edge edge = new Edge(hotspots.get(i), hotspots.get(j), weight);
+                if (i != j && !containsReverse(edge)) {
+                    edges.add(edge);
                 }
+
+                // Append the weight to the output string
+                currentLine += String.format("%.2f", weight) + " ";
             }
-            System.out.println(currentLine);
+            System.out.print(currentLine + "\n");
         }
     }
 
-    private boolean containsReverse(Edge original) {
-        Edge swapped = new Edge(original.getV2(), original.getV1(), original.getWeight());  //Create a new edge, with the vertices swapped
-        if(setOfEdges.contains(swapped)) {          //If the swapped vertices create an edge thats already in the set of edges
-            return true;                            //True - don't add to list again
-        } else {
-            return false;                           //False - add it to the list
+    private double distanceBetween(Hotspot h1, Hotspot h2) {
+        // Use the Euclidean distance formula
+        double distance = sqrt(pow((h2.getX() - h1.getX()), 2) + pow((h2.getY() - h1.getY()), 2));
+
+        // Round the distance to 2 decimal places
+        BigDecimal bd = new BigDecimal(distance);
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
+
+        // Return the rounded distance
+        return bd.doubleValue();
+    }
+
+    private boolean containsReverse(Edge edge) {
+        // Create a new edge with the vertices reversed
+        Edge reverse = new Edge(edge.getV2(), edge.getV1(), edge.getWeight());
+
+        // Check if the reversed edge is already in the set
+        return edges.contains(reverse);
+    }
+
+    private void mainMenu() {
+        Scanner sc = new Scanner(System.in);
+        int selection = -2;
+        while (selection != 0) {
+            // Print menu and get user selection
+            printMenu();
+            try {
+                selection = sc.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.print("\nEntry not valid.\n");
+                continue;
+            }
+
+            // Run user selection
+            if (selection < -1 || selection > 5) {
+                System.out.print("\nEntry not valid.\n");
+            } else if (selection == -1) {
+                autoSelect();
+            } else if (selection != 0) {
+                userDefined(selection);
+            } else {
+                System.out.print("\nThank you for using Kruskal’s Clustering. Bye.\n");
+            }
         }
     }
 
+    private void printMenu() {
+        System.out.print("How many emergency stations would you like?\n");
+        System.out.print("(Enter a number between 1 and 5 to place the emergency stations.\n");
+        System.out.print("Enter -1 to automatically select the number of emergency stations.\n");
+        System.out.print("Enter 0 to exit.)\n\n");
+    }
 
-
-    private void findCentroid(ArrayList<HotSpot> cluster) {
+    private void findCentroid(ArrayList<Hotspot> cluster) {
         double xTotal = 0;
         double yTotal = 0;
         for(int i = 0; i < cluster.size(); i++) {
@@ -126,7 +151,7 @@ public class Assignment {
         //TODO
         ArrayList<ArrayList<Edge>> disjointSets = null;    ///maybe??
         ArrayList<Edge> addedEdges = new ArrayList<>();
-        ArrayList<Edge> unaddedEdges = setOfEdges;
+        ArrayList<Edge> unaddedEdges = edges;
         while(disjointSets.size() < numberOfStations) {
             Edge tempEdge = searchShortestEdge(unaddedEdges);
             if(!createsCycle(tempEdge, addedEdges)) {  //Adding this edge doesn't create a cycle

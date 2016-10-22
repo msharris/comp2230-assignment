@@ -7,34 +7,33 @@
  * Description: TODO
  */
 
-public class HotSpot {
+public class Hotspot {
 
     private int id;
-    private double xVal;
-    private double yVal;
+    private double x;
+    private double y;
 
-    public HotSpot(int id, double xVal, double yVal) {
+    public Hotspot(int id, double x, double y) {
         this.id = id;
-        this.xVal = xVal;
-        this.yVal = yVal;
+        this.x = x;
+        this.y = y;
     }
 
-    // --- Getters ---
     public int getId() {
         return id;
     }
 
     public double getX() {
-        return xVal;
+        return x;
     }
 
     public double getY() {
-        return yVal;
+        return y;
     }
-
 
     @Override
     public String toString() {
-        return id + ": (" + xVal + "," + yVal + ")";
+        return Integer.toString(id);
     }
+
 }
