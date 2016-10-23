@@ -7,7 +7,7 @@
  * Description: TODO
  */
 
-public class Hotspot {
+public class Hotspot implements Comparable<Hotspot> {
 
     private int id;
     private double x;
@@ -29,6 +29,11 @@ public class Hotspot {
 
     public double getY() {
         return y;
+    }
+
+    @Override
+    public int compareTo(Hotspot hotspot) {
+        return id - hotspot.getId();
     }
 
     @Override

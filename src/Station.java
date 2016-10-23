@@ -7,52 +7,64 @@
  * Description: TODO
  */
 
-
-import java.util.*;
+import java.util.ArrayList;
 
 public class Station {
 
-    private int idCounter = 1;
-    private String id;
-    private double xVal;
-    private double yVal;
-    private ArrayList<Hotspot> stationHotspots = new ArrayList<>();
+    private int id;
+    private ArrayList<Hotspot> hotspots;
+    private double x;
+    private double y;
 
-    public Station(int xVal, int yVal) {
-        id = "Station " + idCounter;
-        this.xVal = xVal;
-        this.yVal = yVal;
-        idCounter++;
+    public Station(int id, ArrayList<Hotspot> hotspots) {
+        this.id = id;
+        this.hotspots = hotspots;
+        setCentroid();
     }
 
-    // --- Getters ---
-    public String getId() {
+    private void setCentroid() {
+        // Create total count variables
+        double xTotal = 0;
+        double yTotal = 0;
+
+        // Generate a total count
+        for (Hotspot hotspot : hotspots) {
+            xTotal += hotspot.getX();
+            yTotal += hotspot.getY();
+        }
+
+        // Calculate the centroid and update location members
+        x = xTotal / hotspots.size();
+        y = yTotal / hotspots.size();
+    }
+
+    public int getId() {
         return id;
     }
 
     public double getX() {
-        return xVal;
+        return x;
     }
 
     public double getY() {
-        return yVal;
+        return y;
     }
 
-    public ArrayList<Hotspot> getHotSpots() {
-        return stationHotspots;
+    public ArrayList<Hotspot> getHotspots() {
+        return hotspots;
     }
 
     @Override
-    public String toString() {	//Untested
-        String spotList = "";														//List of hotspots to be kept in a string format "x,y,z"
-        for(int i = 0; i < stationHotspots.size(); i++) {								//For loop is to get the id of each of the hotspots at this station, then concatenates them to a string
-            if(i != stationHotspots.size()-1) {										//If statement just controls whether or not a comma is placed after the number (as the last number doesnt have a comma after it)
-                spotList = spotList.concat(stationHotspots.get(i).getId() + ",");	//If not last number, add a ","
-            } else {
-                spotList = spotList.concat(stationHotspots.get(i).getId()+"");			//Otherwise don't add anything
-            }
+    public String toString() {
+        String str = "Station " + id + ":\n";
+        str += "Coordinates: (" + String.format("%.2f", x) + ", " + String.format("%.2f", y) + ")\n";
+        str += "Hotspots: {";
+        for (Hotspot hotspot : hotspots) {
+            str += hotspot + ", ";
         }
-        return id + ": \nCoordinates: (" + xVal + ", " + yVal + ")\nHotSpots: {" + spotList + "}";
+        str = str.substring(0, str.length() - 2);
+        str += "}\n";
+        return str;
     }
 
 }

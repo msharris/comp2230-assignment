@@ -8,14 +8,7 @@
  */
 
 import java.io.File;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.Scanner;
-
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
+import java.util.*;
 
 public class Assignment {
 
@@ -87,14 +80,7 @@ public class Assignment {
 
     private double distanceBetween(Hotspot h1, Hotspot h2) {
         // Use the Euclidean distance formula
-        double distance = sqrt(pow((h2.getX() - h1.getX()), 2) + pow((h2.getY() - h1.getY()), 2));
-
-        // Round the distance to 2 decimal places
-        BigDecimal bd = new BigDecimal(distance);
-        bd = bd.setScale(2, RoundingMode.HALF_UP);
-
-        // Return the rounded distance
-        return bd.doubleValue();
+        return Math.sqrt(Math.pow((h2.getX() - h1.getX()), 2) + Math.pow((h2.getY() - h1.getY()), 2));
     }
 
     private boolean containsReverse(Edge edge) {
@@ -122,9 +108,9 @@ public class Assignment {
             if (selection < -1 || selection > 5) {
                 System.out.print("\nEntry not valid.\n");
             } else if (selection == -1) {
-                autoSelect();
+                generateOptimalStations();
             } else if (selection != 0) {
-                userDefined(selection);
+                generateStations(selection);
             } else {
                 System.out.print("\nThank you for using Kruskal’s Clustering. Bye.\n");
             }
@@ -138,47 +124,97 @@ public class Assignment {
         System.out.print("Enter 0 to exit.)\n\n");
     }
 
-    private void findCentroid(ArrayList<Hotspot> cluster) {
-        double xTotal = 0;
-        double yTotal = 0;
-        for(int i = 0; i < cluster.size(); i++) {
-            xTotal = xTotal + cluster.get(i).getX();
-            yTotal = yTotal + cluster.get(i).getY();
+    private void generateOptimalStations() {
+        // TODO Work out the optimal number of stations and then call generateStations with the result
+    }
+
+    private void generateStations(int numberOfStations) {
+        // Get the clusters using Kruskal's algorithm
+        ArrayList<ArrayList<Hotspot>> clusters = kruskal(numberOfStations);
+
+        // Sort the clusters so that the cluster with the smallest hotspot ID is at the start of the list
+        Collections.sort(clusters, (cluster1, cluster2) -> cluster1.get(0).compareTo(cluster2.get(0)));
+
+        // Create the stations
+        ArrayList<Station> stations = new ArrayList<>();
+        for (int i = 0; i < clusters.size(); i++) {
+            ArrayList<Hotspot> cluster = clusters.get(i);
+            Station station = new Station(i + 1, cluster);
+            stations.add(station);
         }
-        double centroidX = xTotal/cluster.size();
-        double centroidY = yTotal/cluster.size();
-        //New station(centroidX, centroidY)?
+
+        // Print stations
+        System.out.print("\n"); // Blank line as per assignment specs
+        for (Station station : stations) {
+            System.out.print(station + "\n");
+        }
     }
 
-    private void autoSelect() {
-        //TODO
-    }
+    private ArrayList<ArrayList<Hotspot>> kruskal(int numberOfTrees) {
+        // Create a list to store the disjoint sets
+        ArrayList<ArrayList<Hotspot>> disjointSets = new ArrayList<>();
 
-    private void userDefined(int numberOfStations) {
-        //TODO
-        ArrayList<ArrayList<Edge>> disjointSets = null;    ///maybe??
-        ArrayList<Edge> addedEdges = new ArrayList<>();
-        ArrayList<Edge> unaddedEdges = edges;
-        while(disjointSets.size() < numberOfStations) {
-            Edge tempEdge = searchShortestEdge(unaddedEdges);
-            if(!createsCycle(tempEdge, addedEdges)) {  //Adding this edge doesn't create a cycle
-                //TODO: add it to the added edges. Note we need to think about how we will have added edges, but also disjoint sets of added edges
-                //Disjoint sets in an array list which holds a list of edges in that subset? see above("maybe")
+        // Create a disjoint set for each hotspot
+        for (Hotspot hotspot : hotspots) {
+            ArrayList<Hotspot> disjointSet = makeSet(hotspot);
+            disjointSets.add(disjointSet);
+        }
 
-            } else {    //This edge does create a cycle, and shouldn't be added to the set. (Will also be removed so it's not considered every time after this, if it creates a cycle now, it always will)
-                unaddedEdges.remove(tempEdge);  //Remove this edge, it will create a cycle
+        // Sort the edges by weight
+        Collections.sort(edges);
+
+        for (Edge edge : edges) {
+            if (disjointSets.size() == numberOfTrees) {
+                break;
+            }
+            if (find(disjointSets, edge.getV1()) != find(disjointSets, edge.getV2())) {
+                union(disjointSets, edge.getV1(), edge.getV2());
             }
         }
+
+        // Return the MST
+        return disjointSets;
     }
 
-    private Edge searchShortestEdge(ArrayList<Edge> list) {
-        //TODO: This will just search through the unadded edges and return the next shortest one
-        return null;
+    private ArrayList<Hotspot> makeSet(Hotspot hotspot) {
+        ArrayList<Hotspot> set = new ArrayList<>();
+        set.add(hotspot);
+        return set;
     }
 
-    private boolean createsCycle(Edge test, ArrayList<Edge> addedEdges) {
-        //TODO: This will take the added edges and test to see if the edge we are looking to add will create a cycle
-        return false;
+    private ArrayList<Hotspot> find(ArrayList<ArrayList<Hotspot>> disjointSets, Hotspot hotspot) {
+        for (ArrayList<Hotspot> disjointSet : disjointSets) {
+            if (disjointSet.contains(hotspot)) {
+                return disjointSet;
+            }
+        }
+        throw new IllegalArgumentException();
+    }
+
+    private void union(ArrayList<ArrayList<Hotspot>> disjointSets, Hotspot v1, Hotspot v2) {
+        // Find the two sets containing v1 and v2, respectively
+        ArrayList<Hotspot> v1Set = null;
+        ArrayList<Hotspot> v2Set = null;
+        for (ArrayList<Hotspot> disjointSet : disjointSets) {
+            if (disjointSet.contains(v1)) {
+                v1Set = disjointSet;
+                disjointSets.remove(disjointSet);
+                break;
+            }
+        }
+        for (ArrayList<Hotspot> disjointSet : disjointSets) {
+            if (disjointSet.contains(v2)) {
+                v2Set = disjointSet;
+                disjointSets.remove(disjointSet);
+                break;
+            }
+        }
+
+        // Make a new disjoint set and add it to the list of disjoint sets
+        ArrayList<Hotspot> disjointSet = new ArrayList<>();
+        disjointSet.addAll(v1Set);
+        disjointSet.addAll(v2Set);
+        disjointSets.add(disjointSet);
     }
 
 }
