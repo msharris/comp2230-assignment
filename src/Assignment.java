@@ -15,12 +15,19 @@ import java.util.Scanner;
 
 public class Assignment {
 
-    private ArrayList<Hotspot> hotspots = new ArrayList<>();
-    private ArrayList<Edge> edges = new ArrayList<>();  // Excludes edges that loop on one vertex
+    private ArrayList<Hotspot> hotspots;
+    private ArrayList<Edge> edges; // Excludes edges that loop on one vertex
+    private double maxRatio; // Because we can't return 2 things from a method
 
     public static void main(String[] args) {
         Assignment assignment = new Assignment();
         assignment.run();
+    }
+
+    private Assignment() {
+        hotspots = new ArrayList<>();
+        edges = new ArrayList<>();
+        maxRatio = 0.0;
     }
 
     private void run() {
@@ -115,7 +122,12 @@ public class Assignment {
             if (selection < -1 || selection > hotspots.size()) {
                 System.out.print("\nEntry not valid.\n\n");
             } else if (selection == -1) {
-                generateOptimalStations();
+                // TODO Ensure there are at least 2 hotspots. Doesn't work with 2? Look into this
+                ArrayList<Integer> optimalNumberOfStations = findOptimalNumberOfStations();
+                printOptimalNumberOfStations(optimalNumberOfStations);
+                ArrayList<Station> stations = generateStations(optimalNumberOfStations.get(0));
+                printStations(stations);
+                printMaxRatio();
             } else if (selection != 0) {
                 ArrayList<Station> stations = generateStations(selection);
                 printStations(stations);
@@ -140,6 +152,15 @@ public class Assignment {
         }
     }
 
+    private void printOptimalNumberOfStations(ArrayList<Integer> optimalNumberOfStations) {
+        String str = "\nNumber of stations: ";
+        for (Integer i : optimalNumberOfStations) {
+            str += i + ", ";
+        }
+        str = str.substring(0, str.length() - 2);
+        System.out.print(str + "\n");
+    }
+
     private void printInterClusteringDistance(ArrayList<Station> stations) {
         if (stations.size() > 1) {
             double interClusteringDistance = interClusteringDistance(stations);
@@ -147,6 +168,10 @@ public class Assignment {
         } else {
             System.out.print("Inter-clustering distance: Not applicable.\n\n");
         }
+    }
+
+    private void printMaxRatio() {
+        System.out.print("\nInterCD/IntraCD = " + String.format("%.2f", maxRatio) + "\n\n");
     }
 
     private double interClusteringDistance(ArrayList<Station> stations) {
@@ -173,8 +198,50 @@ public class Assignment {
         return interCd;
     }
 
-    private void generateOptimalStations() {
-        // TODO Work out the optimal number of stations and then call generateStations with the result
+    private double intraClusteringDistance(ArrayList<Station> stations) {
+        // Ensure that there is at least one station
+        if (stations.size() < 1) {
+            throw new IllegalArgumentException();
+        }
+
+        // Calculate the intra-clustering distance
+        double intraCd = 0.0;
+        for (Station station : stations) {
+            ArrayList<Hotspot> hotspots = station.getHotspots();
+            for (int i = 1; i < hotspots.size(); i++) {
+                double distance = distanceBetween(hotspots.get(0), hotspots.get(i));
+                if (distance > intraCd) {
+                    intraCd = distance;
+                }
+            }
+        }
+
+        // Return the intra-clustering distance
+        return intraCd;
+    }
+
+    private ArrayList<Integer> findOptimalNumberOfStations() {
+        // Create variables to store the max InterCD/IntraCD ratio and the optimal number of stations
+        maxRatio = 0.0;
+        ArrayList<Integer> optimalNumberOfStations = new ArrayList<>();
+
+        // TODO Check with Ljiljana about the 2 <= k <= n-1 condition
+        for (int numberOfStations = 2; numberOfStations < hotspots.size(); numberOfStations++) {
+            ArrayList<Station> stations = generateStations(numberOfStations);
+            double interCd = interClusteringDistance(stations);
+            double intraCd = intraClusteringDistance(stations);
+            double ratio = interCd / intraCd;
+            if (ratio > maxRatio) {
+                maxRatio = ratio;
+                optimalNumberOfStations.clear();
+                optimalNumberOfStations.add(numberOfStations);
+            } else if (ratio == maxRatio) {
+                optimalNumberOfStations.add(numberOfStations);
+            }
+        }
+
+        // Return the optimal number of stations
+        return optimalNumberOfStations;
     }
 
     private ArrayList<Station> generateStations(int numberOfStations) {
