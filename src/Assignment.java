@@ -54,7 +54,11 @@ public class Assignment {
     // TODO Display "There is 1 hotspot." when input has only 1 hotspot?
     private void printGreeting() {
         System.out.print("Hello and welcome to Kruskal’s clustering!\n\n");
-        System.out.print("There are " + hotspots.size() + " hotspots.\n\n");
+        if (hotspots.size() == 1) {
+            System.out.print("There is " + hotspots.size() + " hotspot.\n\n");
+        } else {
+            System.out.print("There are " + hotspots.size() + " hotspots.\n\n");
+        }
         System.out.print("The weighted graph of hotspots:\n\n");
     }
 
@@ -100,13 +104,13 @@ public class Assignment {
             try {
                 selection = sc.nextInt();
             } catch (InputMismatchException e) {
-                System.out.print("\nEntry not valid.\n");
+                System.out.print("\nEntry not valid.\n\n");
                 continue;
             }
 
             // Run user selection
-            if (selection < -1 || selection > 5) {
-                System.out.print("\nEntry not valid.\n");
+            if (selection < -1 || selection > hotspots.size()) {
+                System.out.print("\nEntry not valid.\n\n");
             } else if (selection == -1) {
                 generateOptimalStations();
             } else if (selection != 0) {
@@ -119,7 +123,7 @@ public class Assignment {
 
     private void printMenu() {
         System.out.print("How many emergency stations would you like?\n");
-        System.out.print("(Enter a number between 1 and 5 to place the emergency stations.\n");
+        System.out.print("(Enter a number between 1 and " + hotspots.size() + " to place the emergency stations.\n");
         System.out.print("Enter -1 to automatically select the number of emergency stations.\n");
         System.out.print("Enter 0 to exit.)\n\n");
     }
@@ -147,6 +151,28 @@ public class Assignment {
         System.out.print("\n"); // Blank line as per assignment specs
         for (Station station : stations) {
             System.out.print(station + "\n");
+        }
+
+        // Calculate the inter-clustering distance
+        if (stations.size() > 1) {
+            double interClusteringDistance = distanceBetween(stations.get(0).getHotspots().get(0),
+                    stations.get(1).getHotspots().get(0));
+            ArrayList<Hotspot> s1Cluster = stations.get(0).getHotspots();
+            for (int i = 1; i < stations.size(); i++) {
+                ArrayList<Hotspot> s2Cluster = stations.get(i).getHotspots();
+                for (Hotspot h : s1Cluster) {
+                    for (Hotspot j : s2Cluster) {
+                        if (distanceBetween(h, j) < interClusteringDistance) {
+                            interClusteringDistance = distanceBetween(h, j);
+                        }
+                    }
+                }
+            }
+
+            // Print the inter-clustering distance
+            System.out.print("Inter-clustering distance: " + String.format("%.2f", interClusteringDistance) + "\n\n");
+        } else {
+            System.out.print("Inter-clustering distance: Not applicable.\n\n");
         }
     }
 
