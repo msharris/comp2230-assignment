@@ -7,7 +7,7 @@
  * Description: TODO
  */
 
-public class Edge {
+public class Edge implements Comparable<Edge> {
 
     Hotspot v1;
     Hotspot v2;
@@ -29,6 +29,17 @@ public class Edge {
 
     public double getWeight() {
         return weight;
+    }
+
+    @Override
+    public int compareTo(Edge edge) {
+        if (weight < edge.getWeight()) {
+            return -1;
+        } else if (weight > edge.getWeight()) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
 }
