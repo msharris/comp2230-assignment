@@ -8,7 +8,10 @@
  */
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.InputMismatchException;
+import java.util.Scanner;
 
 public class Assignment {
 
@@ -114,7 +117,9 @@ public class Assignment {
             } else if (selection == -1) {
                 generateOptimalStations();
             } else if (selection != 0) {
-                generateStations(selection);
+                ArrayList<Station> stations = generateStations(selection);
+                printStations(stations);
+                printInterClusteringDistance(stations);
             } else {
                 System.out.print("\nThank you for using Kruskal’s Clustering. Bye.\n");
             }
@@ -128,11 +133,51 @@ public class Assignment {
         System.out.print("Enter 0 to exit.)\n\n");
     }
 
+    private void printStations(ArrayList<Station> stations) {
+        System.out.print("\n"); // Blank line as per assignment specs
+        for (Station station : stations) {
+            System.out.print(station + "\n");
+        }
+    }
+
+    private void printInterClusteringDistance(ArrayList<Station> stations) {
+        if (stations.size() > 1) {
+            double interClusteringDistance = interClusteringDistance(stations);
+            System.out.print("Inter-clustering distance: " + String.format("%.2f", interClusteringDistance) + "\n\n");
+        } else {
+            System.out.print("Inter-clustering distance: Not applicable.\n\n");
+        }
+    }
+
+    private double interClusteringDistance(ArrayList<Station> stations) {
+        // Ensure that there are more than 2 stations
+        if (stations.size() < 2) {
+            throw new IllegalArgumentException();
+        }
+
+        // Calculate the inter-clustering distance
+        double interCd = distanceBetween(stations.get(0).getHotspots().get(0), stations.get(1).getHotspots().get(0));
+        ArrayList<Hotspot> s1Cluster = stations.get(0).getHotspots();
+        for (int i = 1; i < stations.size(); i++) {
+            ArrayList<Hotspot> s2Cluster = stations.get(i).getHotspots();
+            for (Hotspot h : s1Cluster) {
+                for (Hotspot j : s2Cluster) {
+                    if (distanceBetween(h, j) < interCd) {
+                        interCd = distanceBetween(h, j);
+                    }
+                }
+            }
+        }
+
+        // Return the inter-clustering distance
+        return interCd;
+    }
+
     private void generateOptimalStations() {
         // TODO Work out the optimal number of stations and then call generateStations with the result
     }
 
-    private void generateStations(int numberOfStations) {
+    private ArrayList<Station> generateStations(int numberOfStations) {
         // Get the clusters using Kruskal's algorithm
         ArrayList<ArrayList<Hotspot>> clusters = kruskal(numberOfStations);
 
@@ -147,33 +192,8 @@ public class Assignment {
             stations.add(station);
         }
 
-        // Print stations
-        System.out.print("\n"); // Blank line as per assignment specs
-        for (Station station : stations) {
-            System.out.print(station + "\n");
-        }
-
-        // Calculate the inter-clustering distance
-        if (stations.size() > 1) {
-            double interClusteringDistance = distanceBetween(stations.get(0).getHotspots().get(0),
-                    stations.get(1).getHotspots().get(0));
-            ArrayList<Hotspot> s1Cluster = stations.get(0).getHotspots();
-            for (int i = 1; i < stations.size(); i++) {
-                ArrayList<Hotspot> s2Cluster = stations.get(i).getHotspots();
-                for (Hotspot h : s1Cluster) {
-                    for (Hotspot j : s2Cluster) {
-                        if (distanceBetween(h, j) < interClusteringDistance) {
-                            interClusteringDistance = distanceBetween(h, j);
-                        }
-                    }
-                }
-            }
-
-            // Print the inter-clustering distance
-            System.out.print("Inter-clustering distance: " + String.format("%.2f", interClusteringDistance) + "\n\n");
-        } else {
-            System.out.print("Inter-clustering distance: Not applicable.\n\n");
-        }
+        // Return the stations
+        return stations;
     }
 
     private ArrayList<ArrayList<Hotspot>> kruskal(int numberOfTrees) {
