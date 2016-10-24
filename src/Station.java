@@ -42,16 +42,16 @@ public class Station {
         return id;
     }
 
+    public ArrayList<Hotspot> getHotspots() {
+        return hotspots;
+    }
+
     public double getX() {
         return x;
     }
 
     public double getY() {
         return y;
-    }
-
-    public ArrayList<Hotspot> getHotspots() {
-        return hotspots;
     }
 
     @Override
