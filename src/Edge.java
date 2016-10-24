@@ -9,9 +9,9 @@
 
 public class Edge implements Comparable<Edge> {
 
-    Hotspot v1;
-    Hotspot v2;
-    double weight;
+    private Hotspot v1;
+    private Hotspot v2;
+    private double weight;
 
     public Edge(Hotspot v1, Hotspot v2, double weight) {
         this.v1 = v1;
