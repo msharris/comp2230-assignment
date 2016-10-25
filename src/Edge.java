@@ -4,7 +4,7 @@
  * Assessment: Assignment
  *
  * Class name: Edge
- * Description: TODO
+ * Description: Represents and edge between two natural disaster hotspots and stores the distance between them.
  */
 
 public class Edge implements Comparable<Edge> {

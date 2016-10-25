@@ -3,8 +3,8 @@
  * Course: COMP2230 Algorithmics
  * Assessment: Assignment
  *
- * Class name: HotSpot
- * Description: TODO
+ * Class name: Hotspot
+ * Description: Represents a natural disaster hotspot defining it by its ID and coordinates.
  */
 
 public class Hotspot implements Comparable<Hotspot> {

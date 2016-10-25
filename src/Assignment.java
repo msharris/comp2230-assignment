@@ -4,7 +4,10 @@
  * Assessment: Assignment
  *
  * Class name: Assignment
- * Description: TODO
+ * Description: Solves a clustering problem for emergency services. It ensures that two natural disaster hotspots
+ *              belonging to different emergency stations are as far away from each other as possible, and that hotspots
+ *              belonging to the same emergency station are as close together as possible so that emergency services can
+ *              move from one hotspot to another.
  */
 
 import java.io.File;
@@ -16,8 +19,8 @@ import java.util.Scanner;
 public class Assignment {
 
     private ArrayList<Hotspot> hotspots;
-    private ArrayList<Edge> edges; // Excludes edges that loop on one vertex
-    private double maxRatio; // Because we can't return 2 things from a method
+    private ArrayList<Edge> edges;
+    private double interIntraRatio; // Because we can't return 2 things from a method
 
     public static void main(String[] args) {
         Assignment assignment = new Assignment();
@@ -27,15 +30,19 @@ public class Assignment {
     private Assignment() {
         hotspots = new ArrayList<>();
         edges = new ArrayList<>();
-        maxRatio = 0.0;
+        interIntraRatio = 0.0;
     }
 
     private void run() {
-        readInputFile();
         printGreeting();
-        weightedGraph();
-        System.out.print("\n\n"); // Two blank lines as per assignment specs
+        readInputFile();
+        printHotspots();
         mainMenu();
+        printFarewell();
+    }
+
+    private void printGreeting() {
+        System.out.print("Hello and welcome to Kruskal’s clustering!\n\n");
     }
 
     private void readInputFile() {
@@ -55,28 +62,38 @@ public class Assignment {
             // Close the Scanner
             sc.close();
         } catch (Exception e) {
-            // Catch any exceptions that can go wrong when reading the input file
-            System.out.print("An exception occurred reading the input file\n");
+            // Catch any exceptions that can occur when reading the input file
+            System.out.print("There was a problem reading the input file.\n\n");
+            printFarewell();
             System.exit(1);
         }
     }
 
-    // TODO Display "There is 1 hotspot." when input has only 1 hotspot?
-    private void printGreeting() {
-        System.out.print("Hello and welcome to Kruskal’s clustering!\n\n");
+    private void printHotspots() {
+        // Dynamically display the number of hotspots depending on the number of hotspots
         if (hotspots.size() == 1) {
             System.out.print("There is " + hotspots.size() + " hotspot.\n\n");
         } else {
             System.out.print("There are " + hotspots.size() + " hotspots.\n\n");
         }
+
+        // Print the weighted graph of hotspots
         System.out.print("The weighted graph of hotspots:\n\n");
+        weightedGraph();
+
+        // Print two blank lines as per the assignment specs
+        System.out.print("\n\n");
     }
 
     private void weightedGraph() {
+        // Determine the weighted graph of hotspots
         for (int i = 0; i < hotspots.size(); i++) {
+            // Create an output string to store the intermediate results for the current hotspot
             String currentLine = "";
+
+            // Determine the weight between the current hotspot and all other hotspots
             for (int j = 0; j < hotspots.size(); j++) {
-                // Get weight between hotspots
+                // Get the weight between the hotspots
                 double weight = distanceBetween(hotspots.get(i), hotspots.get(j));
 
                 // Create an edge and add it to the set if it's not a loop and it's not already added in reverse
@@ -88,6 +105,8 @@ public class Assignment {
                 // Append the weight to the output string
                 currentLine += String.format("%.2f", weight) + " ";
             }
+
+            // We have found the weight between the current hotspot and all other hotspots - print the results
             System.out.print(currentLine + "\n");
         }
     }
@@ -106,34 +125,36 @@ public class Assignment {
     }
 
     private void mainMenu() {
+        // Create a Scanner to read user input and declare a variable to store that input
         Scanner sc = new Scanner(System.in);
         int selection = -2;
+
+        // Always return to the main menu until the user chooses to exit (option 0)
         while (selection != 0) {
-            // Print menu and get user selection
+            // Print the menu
             printMenu();
+
+            // Get the users selection
             try {
                 selection = sc.nextInt();
             } catch (InputMismatchException e) {
-                System.out.print("\nEntry not valid.\n\n");
+                System.out.print("\n"); // Print a blank line as per the assignment specs
+                printInvalidEntry();
                 continue;
             }
 
-            // Run user selection
+            // Print a blank line as per the assignment specs
+            System.out.print("\n");
+
+            // Run the user's selection
             if (selection < -1 || selection > hotspots.size()) {
-                System.out.print("\nEntry not valid.\n\n");
+                printInvalidEntry();
             } else if (selection == -1) {
-                // TODO Ensure there are at least 2 hotspots. Doesn't work with 2? Look into this
-                ArrayList<Integer> optimalNumberOfStations = findOptimalNumberOfStations();
-                printOptimalNumberOfStations(optimalNumberOfStations);
-                ArrayList<Station> stations = generateStations(optimalNumberOfStations.get(0));
-                printStations(stations);
-                printMaxRatio();
+                automaticSelection();
             } else if (selection != 0) {
-                ArrayList<Station> stations = generateStations(selection);
-                printStations(stations);
-                printInterClusteringDistance(stations);
+                manualSelection(selection);
             } else {
-                System.out.print("\nThank you for using Kruskal’s Clustering. Bye.\n");
+                break;
             }
         }
     }
@@ -145,19 +166,50 @@ public class Assignment {
         System.out.print("Enter 0 to exit.)\n\n");
     }
 
+    private void printInvalidEntry() {
+        System.out.print("Entry not valid.\n\n");
+    }
+
+    private void automaticSelection() {
+        // Ensure there are at least 3 hotspots because otherwise we cannot calculate the optimal number of stations
+        if (hotspots.size() < 3) {
+            System.out.print("This option cannot be selected for less than 3 hotspots.\n\n");
+            return;
+        }
+
+        // Find and print the optimal number of stations (there may be more than one optimal number)
+        ArrayList<Integer> optimalNumberOfStations = findOptimalNumberOfStations();
+        printOptimalNumberOfStations(optimalNumberOfStations);
+
+        // Generate the first optimal number of stations
+        ArrayList<Station> stations = generateStations(optimalNumberOfStations.get(0));
+
+        // Print the stations and the InterCD/IntraCD ratio
+        printStations(stations);
+        printInterIntraRatio();
+    }
+
+    private void manualSelection(int numberOfStations) {
+        // Generate the stations
+        ArrayList<Station> stations = generateStations(numberOfStations);
+
+        // Print the stations and the inter-clustering distance
+        printStations(stations);
+        printInterClusteringDistance(stations);
+    }
+
     private void printStations(ArrayList<Station> stations) {
-        System.out.print("\n"); // Blank line as per assignment specs
         for (Station station : stations) {
-            System.out.print(station + "\n");
+            System.out.print(station + "\n\n");
         }
     }
 
     private void printOptimalNumberOfStations(ArrayList<Integer> optimalNumberOfStations) {
-        String str = "\nNumber of stations: ";
+        String str = "Number of stations: ";
         for (Integer i : optimalNumberOfStations) {
             str += i + ", ";
         }
-        str = str.substring(0, str.length() - 2);
+        str = str.substring(0, str.length() - 2); // Remove the trailing ", " from the output string
         System.out.print(str + "\n");
     }
 
@@ -170,12 +222,12 @@ public class Assignment {
         }
     }
 
-    private void printMaxRatio() {
-        System.out.print("\nInterCD/IntraCD = " + String.format("%.2f", maxRatio) + "\n\n");
+    private void printInterIntraRatio() {
+        System.out.print("\nInterCD/IntraCD = " + String.format("%.2f", interIntraRatio) + "\n\n");
     }
 
     private double interClusteringDistance(ArrayList<Station> stations) {
-        // Ensure that there are more than 2 stations
+        // Ensure that there are at least 2 stations
         if (stations.size() < 2) {
             throw new IllegalArgumentException();
         }
@@ -199,7 +251,7 @@ public class Assignment {
     }
 
     private double intraClusteringDistance(ArrayList<Station> stations) {
-        // Ensure that there is at least one station
+        // Ensure that there is at least 1 station
         if (stations.size() < 1) {
             throw new IllegalArgumentException();
         }
@@ -221,21 +273,33 @@ public class Assignment {
     }
 
     private ArrayList<Integer> findOptimalNumberOfStations() {
+        // Ensure there are at least 3 hotspots because otherwise the optimal number of stations cannot be calculated
+        if (hotspots.size() < 3) {
+            throw new IllegalArgumentException();
+        }
+
         // Create variables to store the max InterCD/IntraCD ratio and the optimal number of stations
-        maxRatio = 0.0;
+        interIntraRatio = 0.0;
         ArrayList<Integer> optimalNumberOfStations = new ArrayList<>();
 
-        // TODO Check with Ljiljana about the 2 <= k <= n-1 condition
+        // For 2 <= k <= n-1, where k is the number of stations and n is the number of hotspots, determine the optimal
+        // number of stations for the given number of hotspots
         for (int numberOfStations = 2; numberOfStations < hotspots.size(); numberOfStations++) {
+            // Generate the stations
             ArrayList<Station> stations = generateStations(numberOfStations);
+
+            // Calculate the InterCD/IntraCD ratio
             double interCd = interClusteringDistance(stations);
             double intraCd = intraClusteringDistance(stations);
             double ratio = interCd / intraCd;
-            if (ratio > maxRatio) {
-                maxRatio = ratio;
+
+            // Clear and add the current number of stations to the list i the ratio is the largest found so far,
+            // else, if it is equal to the largest found so far, add it to the list
+            if (ratio > interIntraRatio) {
+                interIntraRatio = ratio;
                 optimalNumberOfStations.clear();
                 optimalNumberOfStations.add(numberOfStations);
-            } else if (ratio == maxRatio) {
+            } else if (ratio == interIntraRatio) {
                 optimalNumberOfStations.add(numberOfStations);
             }
         }
@@ -251,7 +315,7 @@ public class Assignment {
         // Sort the clusters so that the cluster with the smallest hotspot ID is at the start of the list
         Collections.sort(clusters, (cluster1, cluster2) -> cluster1.get(0).compareTo(cluster2.get(0)));
 
-        // Create the stations
+        // Create a Station for each cluster and add it to the list
         ArrayList<Station> stations = new ArrayList<>();
         for (int i = 0; i < clusters.size(); i++) {
             ArrayList<Hotspot> cluster = clusters.get(i);
@@ -269,18 +333,23 @@ public class Assignment {
 
         // Create a disjoint set for each hotspot
         for (Hotspot hotspot : hotspots) {
-            ArrayList<Hotspot> disjointSet = makeSet(hotspot);
+            ArrayList<Hotspot> disjointSet = makeset(hotspot);
             disjointSets.add(disjointSet);
         }
 
         // Sort the edges by weight
         Collections.sort(edges);
 
+        // For each edge, if the edge doesn't create a cycle (i.e. its vertices aren't already in the same component),
+        // then add it to the component (i.e. merge the disjoint sets)
         for (Edge edge : edges) {
+            // Break if we have obtained the number of minimum spanning trees we are looking for
             if (disjointSets.size() == numberOfTrees) {
                 break;
             }
-            if (find(disjointSets, edge.getV1()) != find(disjointSets, edge.getV2())) {
+
+            // Merge the disjoint sets if the adding the edge doesn't create a cycle
+            if (findset(disjointSets, edge.getV1()) != findset(disjointSets, edge.getV2())) {
                 union(disjointSets, edge.getV1(), edge.getV2());
             }
         }
@@ -289,45 +358,45 @@ public class Assignment {
         return disjointSets;
     }
 
-    private ArrayList<Hotspot> makeSet(Hotspot hotspot) {
+    private ArrayList<Hotspot> makeset(Hotspot hotspot) {
+        // Create and return a new set containing the hotspot
         ArrayList<Hotspot> set = new ArrayList<>();
         set.add(hotspot);
         return set;
     }
 
-    private ArrayList<Hotspot> find(ArrayList<ArrayList<Hotspot>> disjointSets, Hotspot hotspot) {
+    private ArrayList<Hotspot> findset(ArrayList<ArrayList<Hotspot>> disjointSets, Hotspot hotspot) {
+        // Find and return the disjoint set that contains the hotspot
         for (ArrayList<Hotspot> disjointSet : disjointSets) {
             if (disjointSet.contains(hotspot)) {
                 return disjointSet;
             }
         }
-        throw new IllegalArgumentException();
+
+        // The hotspot was not found in any disjoint set
+        return null;
     }
 
     private void union(ArrayList<ArrayList<Hotspot>> disjointSets, Hotspot v1, Hotspot v2) {
-        // Find the two sets containing v1 and v2, respectively
-        ArrayList<Hotspot> v1Set = null;
-        ArrayList<Hotspot> v2Set = null;
-        for (ArrayList<Hotspot> disjointSet : disjointSets) {
-            if (disjointSet.contains(v1)) {
-                v1Set = disjointSet;
-                disjointSets.remove(disjointSet);
-                break;
-            }
-        }
-        for (ArrayList<Hotspot> disjointSet : disjointSets) {
-            if (disjointSet.contains(v2)) {
-                v2Set = disjointSet;
-                disjointSets.remove(disjointSet);
-                break;
-            }
-        }
+        // Find the two disjoint sets containing v1 and v2, respectively
+        ArrayList<Hotspot> v1Set = findset(disjointSets, v1);
+        ArrayList<Hotspot> v2Set = findset(disjointSets, v2);
 
-        // Make a new disjoint set and add it to the list of disjoint sets
+        // Remove the two disjoint sets from the list of disjoint sets
+        disjointSets.remove(v1Set);
+        disjointSets.remove(v2Set);
+
+        // Make a new disjoint set and merge the two previously found disjoint sets
         ArrayList<Hotspot> disjointSet = new ArrayList<>();
         disjointSet.addAll(v1Set);
         disjointSet.addAll(v2Set);
+
+        // Add the new disjoint set to the list of disjoint sets
         disjointSets.add(disjointSet);
+    }
+
+    private void printFarewell() {
+        System.out.print("Thank you for using Kruskal’s Clustering. Bye.\n");
     }
 
 }

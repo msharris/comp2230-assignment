@@ -4,7 +4,8 @@
  * Assessment: Assignment
  *
  * Class name: Station
- * Description: TODO
+ * Description: Represents and emergency station and the natural disaster hotspots it serves. An emergency station is
+ *              defined by its ID and coordinates.
  */
 
 import java.util.ArrayList;
@@ -62,8 +63,8 @@ public class Station {
         for (Hotspot hotspot : hotspots) {
             str += hotspot + ", ";
         }
-        str = str.substring(0, str.length() - 2);
-        str += "}\n";
+        str = str.substring(0, str.length() - 2); // Remove the trailing ", " from the output string
+        str += "}";
         return str;
     }
 
