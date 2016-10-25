@@ -217,7 +217,7 @@ public class Assignment {
             str += i + ", ";
         }
         str = str.substring(0, str.length() - 2); // Remove the trailing ", " from the output string
-        System.out.print(str + "\n");
+        System.out.print(str + "\n\n");
     }
 
     private void printInterClusteringDistance(ArrayList<Station> stations) {
@@ -403,7 +403,7 @@ public class Assignment {
     }
 
     private void printFarewell() {
-        System.out.print("Thank you for using Kruskal’s Clustering. Bye.\n");
+        System.out.print("Thank you for using Kruskal’s Clustering. Bye.\n\n");
     }
 
 }
