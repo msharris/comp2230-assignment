@@ -37,6 +37,16 @@ public class Hotspot implements Comparable<Hotspot> {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Hotspot) {
+            Hotspot hotspot = (Hotspot) obj;
+            return id == hotspot.getId() || x == hotspot.getX() && y == hotspot.getY();
+        } else {
+            return super.equals(obj);
+        }
+    }
+
+    @Override
     public String toString() {
         return Integer.toString(id);
     }

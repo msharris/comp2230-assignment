@@ -50,13 +50,20 @@ public class Assignment {
             // Open a Scanner on the input file
             Scanner sc = new Scanner(new File("input.txt"));
 
-            // Read the input and create new hotspots
+            // Read the input file
             while (sc.hasNext()) {
+                // Get hotspot data and create a new Hotspot
                 int id = sc.nextInt();
                 double x = sc.nextDouble();
                 double y = sc.nextDouble();
                 Hotspot hotspot = new Hotspot(id, x, y);
-                hotspots.add(hotspot);
+
+                // Add the hotspot to the list if it hasn't previously been defined
+                if (hotspots.contains(hotspot)) {
+                    throw new Exception();
+                } else {
+                    hotspots.add(hotspot);
+                }
             }
 
             // Close the Scanner
